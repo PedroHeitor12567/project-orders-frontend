@@ -2,7 +2,7 @@ import type {
   FieldName,
   FormErrors,
   FormValues,
-  ProjectRequestPayload,
+  ProjectRequestBody,
   ProjectType,
 } from "../types/projectRequest";
 
@@ -24,8 +24,8 @@ export const fieldLimits: Record<Exclude<FieldName, "project_type">, TextRule> =
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function validateField(
-  field: FieldName,
-  values: FormValues,
+    field: FieldName,
+    values: FormValues,
 ): string | undefined {
   if (field === "project_type") {
     return values.project_type ? undefined : "Selecione o tipo de projeto.";
@@ -77,7 +77,9 @@ export function validateAll(values: FormValues): FormErrors {
   return errors;
 }
 
-export function toPayload(values: FormValues): ProjectRequestPayload {
+export function toPayload(values: FormValues): ProjectRequestBody {
+  const website = values.website.trim();
+
   return {
     client_name: values.client_name.trim(),
     client_email: values.client_email.trim(),
@@ -86,5 +88,6 @@ export function toPayload(values: FormValues): ProjectRequestPayload {
     description: values.description.trim(),
     deadline: values.deadline.trim(),
     budget: values.budget.trim(),
+    ...(website ? { website } : {}),
   };
 }

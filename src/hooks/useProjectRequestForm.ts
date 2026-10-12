@@ -11,6 +11,7 @@ import { createProjectRequest } from "../services/projectRequests";
 import type {
   FieldName,
   FormErrors,
+  FormField,
   FormValues,
   ProjectRequestResponse,
   ProjectTypePreset,
@@ -31,9 +32,14 @@ const initialValues: FormValues = {
   description: "",
   deadline: "",
   budget: "",
+  website: "",
 };
 
 type FieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+function focusField(field: FieldName): void {
+  document.getElementById(`field-${field}`)?.focus();
+}
 
 export function useProjectRequestForm(preset: ProjectTypePreset | null) {
   const [values, setValues] = useState<FormValues>(initialValues);
@@ -41,6 +47,14 @@ export function useProjectRequestForm(preset: ProjectTypePreset | null) {
   const [status, setStatus] = useState<SubmitStatus>("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [created, setCreated] = useState<ProjectRequestResponse | null>(null);
+  const [focusTarget, setFocusTarget] = useState<FieldName | null>(null);
+
+  useEffect(() => {
+    if (focusTarget && status !== "submitting") {
+      focusField(focusTarget);
+      setFocusTarget(null);
+    }
+  }, [focusTarget, status]);
 
   useEffect(() => {
     if (!preset) {
@@ -52,66 +66,71 @@ export function useProjectRequestForm(preset: ProjectTypePreset | null) {
   }, [preset]);
 
   const handleChange = useCallback(
-    (field: FieldName) => (event: ChangeEvent<FieldElement>) => {
-      const next = { ...values, [field]: event.target.value } as FormValues;
+      (field: FormField) => (event: ChangeEvent<FieldElement>) => {
+        const next = { ...values, [field]: event.target.value } as FormValues;
 
-      setValues(next);
+        setValues(next);
 
-      if (errors[field]) {
-        setErrors((current) => ({
-          ...current,
-          [field]: validateField(field, next),
-        }));
-      }
-    },
-    [values, errors],
+        if (field !== "website" && errors[field]) {
+          setErrors((current) => ({
+            ...current,
+            [field]: validateField(field, next),
+          }));
+        }
+      },
+      [values, errors],
   );
 
   const handleBlur = useCallback(
-    (field: FieldName) => (_event: FocusEvent<FieldElement>) => {
-      setErrors((current) => ({
-        ...current,
-        [field]: validateField(field, values),
-      }));
-    },
-    [values],
+      (field: FieldName) => (_event: FocusEvent<FieldElement>) => {
+        setErrors((current) => ({
+          ...current,
+          [field]: validateField(field, values),
+        }));
+      },
+      [values],
   );
 
   const handleSubmit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+      async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
 
-      if (status === "submitting") {
-        return;
-      }
+        if (status === "submitting") {
+          return;
+        }
 
-      const nextErrors = validateAll(values);
-      setErrors(nextErrors);
+        const nextErrors = validateAll(values);
+        setErrors(nextErrors);
 
-      const firstInvalid = fieldOrder.find((field) => nextErrors[field]);
+        const firstInvalid = fieldOrder.find((field) => nextErrors[field]);
 
-      if (firstInvalid) {
-        document.getElementById(`field-${firstInvalid}`)?.focus();
-        return;
-      }
+        if (firstInvalid) {
+          focusField(firstInvalid);
+          return;
+        }
 
-      setStatus("submitting");
-      setSubmitError(null);
+        setStatus("submitting");
+        setSubmitError(null);
 
-      try {
-        const response = await createProjectRequest(toPayload(values));
-        setCreated(response);
-        setStatus("success");
-      } catch (error) {
-        setSubmitError(
-          error instanceof ApiError
-            ? error.message
-            : "Ocorreu um erro inesperado. Tente novamente.",
-        );
-        setStatus("error");
-      }
-    },
-    [status, values],
+        try {
+          const response = await createProjectRequest(toPayload(values));
+          setCreated(response);
+          setStatus("success");
+        } catch (error) {
+          if (error instanceof ApiError) {
+            setErrors((current) => ({ ...current, ...error.fieldErrors }));
+            setSubmitError(error.message);
+            setFocusTarget(
+                fieldOrder.find((field) => error.fieldErrors[field]) ?? null,
+            );
+          } else {
+            setSubmitError("Ocorreu um erro inesperado. Tente novamente.");
+          }
+
+          setStatus("error");
+        }
+      },
+      [status, values],
   );
 
   const reset = useCallback(() => {

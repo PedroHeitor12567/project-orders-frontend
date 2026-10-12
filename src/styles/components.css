@@ -395,3 +395,15 @@
   color: var(--text);
   letter-spacing: 0.08em;
 }
+
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.success:focus {
+  outline: none;
+}

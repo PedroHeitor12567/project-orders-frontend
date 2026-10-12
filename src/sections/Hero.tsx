@@ -14,7 +14,7 @@ export function Hero() {
           </p>
 
           <h1 id="hero-title" className="hero__title">
-            Transformo ideias em{" "}
+            Transformando ideias em{" "}
             <span className="text-gradient">produtos digitais sólidos</span>
           </h1>
 

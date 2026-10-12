@@ -12,8 +12,8 @@ export function About() {
           <SectionHeading
             id="sobre-title"
             eyebrow="Sobre"
-            title={`Olá, eu sou ${site.owner}`}
-            description={`${site.role} apaixonado por transformar problemas reais em software confiável. Trabalho do banco de dados à interface, cuidando de cada camada com o mesmo nível de atenção.`}
+            title={`Olá, somos a ${site.owner}`}
+            description={`${site.role}, somos uma equipe interessada por transformar ideias e desafios em soluções digitais de verdade. Da concepção à entrega, desenvolvemos projetos sob medida, cuidando de cada detalhe para transformar qualquer ideia em software confiável, funcional e de qualidade.`}
           />
           <TagList items={stack} label="Stack principal" />
         </div>
